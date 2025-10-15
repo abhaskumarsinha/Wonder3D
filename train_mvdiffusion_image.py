@@ -27,23 +27,23 @@ from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 
-import diffusers
-from diffusers import AutoencoderKL, DDPMScheduler, DDIMScheduler, StableDiffusionPipeline
-from diffusers.optimization import get_scheduler
-from diffusers.training_utils import EMAModel
-from diffusers.utils import check_min_version, deprecate, is_wandb_available
-from diffusers.utils.import_utils import is_xformers_available
+#import diffusers
+#from diffusers import AutoencoderKL, DDPMScheduler, DDIMScheduler, StableDiffusionPipeline
+#from diffusers.optimization import get_scheduler
+#from diffusers.training_utils import EMAModel
+#from diffusers.utils import check_min_version, deprecate, is_wandb_available
+#from diffusers.utils.import_utils import is_xformers_available
 
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
 
-from mvdiffusion.models.unet_mv2d_condition import UNetMV2DConditionModel
+#from mvdiffusion.models.unet_mv2d_condition import UNetMV2DConditionModel
 
 # from mvdiffusion.data.dataset_nc import MVDiffusionDatasetV2 as MVDiffusionDataset
-from mvdiffusion.data.objaverse_dataset import ObjaverseDataset as MVDiffusionDataset
+#from mvdiffusion.data.objaverse_dataset import ObjaverseDataset as MVDiffusionDataset
 
-from mvdiffusion.pipelines.pipeline_mvdiffusion_image import MVDiffusionImagePipeline
+#from mvdiffusion.pipelines.pipeline_mvdiffusion_image import MVDiffusionImagePipeline
 
 from einops import rearrange
 
@@ -186,10 +186,7 @@ def log_validation(dataloader, vae, feature_extractor, image_encoder, unet, cfg:
 def main(
     cfg: TrainingConfig
 ):
-    # override local_rank with envvar
-    env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
-    if env_local_rank != -1 and env_local_rank != cfg.local_rank:
-        cfg.local_rank = env_local_rank
+    breakpoint()
 
     vis_dir = os.path.join(cfg.output_dir, cfg.vis_dir)
     logging_dir = os.path.join(cfg.output_dir, cfg.logging_dir)
@@ -211,7 +208,7 @@ def main(
     logger.info(accelerator.state, main_process_only=False)
     if accelerator.is_local_main_process:
         transformers.utils.logging.set_verbosity_warning()
-        diffusers.utils.logging.set_verbosity_info()
+        #diffusers.utils.logging.set_verbosity_info()
     else:
         transformers.utils.logging.set_verbosity_error()
         diffusers.utils.logging.set_verbosity_error()
@@ -267,13 +264,7 @@ def main(
     image_encoder.requires_grad_(False)
     
     if cfg.trainable_modules is None:
-        unet.requires_grad_(True)
-    else:
-        unet.requires_grad_(False)
-        for name, module in unet.named_modules():
-            if name.endswith(tuple(cfg.trainable_modules)):
-                for params in module.parameters():
-                    params.requires_grad = True                
+        unet.requires_grad_(True)               
 
     if cfg.enable_xformers_memory_efficient_attention:
         if is_xformers_available():
@@ -337,17 +328,7 @@ def main(
         )
 
     # Initialize the optimizer
-    if cfg.use_8bit_adam:
-        try:
-            import bitsandbytes as bnb
-        except ImportError:
-            raise ImportError(
-                "Please install bitsandbytes to use 8-bit Adam. You can do so by running `pip install bitsandbytes`"
-            )
-
-        optimizer_cls = bnb.optim.AdamW8bit
-    else:
-        optimizer_cls = torch.optim.AdamW
+    optimizer_cls = torch.optim.AdamW
 
     params, params_class_embedding = [], []
     for name, param in unet.named_parameters():
